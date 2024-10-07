@@ -1,0 +1,28 @@
+from gvm.connections import TLSConnection
+from gvm.protocols.gmp import Gmp
+from gvm.transforms import EtreeTransform
+
+def connect_to_openvas():
+    connection = TLSConnection(hostname="your-openvas-ip", port=9390)
+    gmp = Gmp(connection, transform=EtreeTransform())
+
+    # Login to OpenVAS
+    gmp.authenticate(username="admin", password="your-password")
+
+    return gmp
+
+def start_scan(target_ip):
+    gmp = connect_to_openvas()
+
+    # Create a new target
+    target_id = gmp.create_target(name="Cloud Resource", hosts=[target_ip])['id']
+
+    # Start a scan
+    task_id = gmp.create_task(name="Vulnerability Scan", config_id="daba56c8-73ec-11df-a475-002264764cea", target_id=target_id)['id']
+    gmp.start_task(task_id)
+
+    print(f"Started vulnerability scan on {target_ip}. Task ID: {task_id}")
+
+if __name__ == "__main__":
+    target_ip = "your-cloud-resource-ip"
+    start_scan(target_ip)

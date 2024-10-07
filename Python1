@@ -1,0 +1,26 @@
+from flask import Flask, jsonify
+import boto3
+
+app = Flask(__name__)
+
+# AWS session
+session = boto3.Session(
+    aws_access_key_id='YOUR_AWS_ACCESS_KEY',
+    aws_secret_access_key='YOUR_AWS_SECRET_KEY',
+    region_name='us-east-1'
+)
+ec2 = session.resource('ec2')
+
+@app.route('/api/cloud/instances', methods=['GET'])
+def list_instances():
+    instances_data = []
+    for instance in ec2.instances.all():
+        instances_data.append({
+            'id': instance.id,
+            'state': instance.state['Name'],
+            'securityGroups': [sg['GroupName'] for sg in instance.security_groups]
+        })
+    return jsonify(instances_data)
+
+if __name__ == "__main__":
+    app.run(debug=True)

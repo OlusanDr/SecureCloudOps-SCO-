@@ -1,0 +1,20 @@
+import boto3
+
+def lambda_handler(event, context):
+    ec2 = boto3.client('ec2')
+
+    # Find instances with security groups that have open ports (e.g., port 22)
+    response = ec2.describe_instances(
+        Filters=[{
+            'Name': 'network-interface.group-name',
+            'Values': ['Open-Security-Group']
+        }]
+    )
+    
+    # Isolate the instance
+    for reservation in response['Reservations']:
+        for instance in reservation['Instances']:
+            ec2.stop_instances(InstanceIds=[instance['InstanceId']])
+            print(f"Stopped instance {instance['InstanceId']} due to open ports.")
+
+    return "Action completed."
